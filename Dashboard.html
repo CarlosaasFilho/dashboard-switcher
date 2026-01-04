@@ -1,0 +1,939 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard Switchers — ClearCorrect</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%);
+            color: #ffffff;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: #2a2a2a;
+            border-radius: 12px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #00bcd4 0%, #0097a7 100%);
+            padding: 35px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 38px;
+            font-weight: 700;
+            margin-bottom: 12px;
+            color: #ffffff;
+            letter-spacing: 1px;
+        }
+
+        .header p {
+            font-size: 17px;
+            color: #e0f7fa;
+            font-weight: 500;
+        }
+
+        .tabs {
+            display: flex;
+            background: #1a1a1a;
+            border-bottom: 2px solid #00bcd4;
+        }
+
+        .tab {
+            flex: 1;
+            padding: 18px;
+            text-align: center;
+            cursor: pointer;
+            background: #2a2a2a;
+            border: none;
+            color: #b0b0b0;
+            font-size: 16px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .tab:hover {
+            background: #333333;
+            color: #00bcd4;
+        }
+
+        .tab.active {
+            background: #00bcd4;
+            color: #ffffff;
+        }
+
+        .content {
+            padding: 30px;
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+            animation: fadeIn 0.3s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .form-section {
+            background: #333333;
+            padding: 25px;
+            border-radius: 8px;
+            margin-bottom: 25px;
+            border-left: 4px solid #00bcd4;
+        }
+
+        .form-section h3 {
+            color: #00bcd4;
+            margin-bottom: 20px;
+            font-size: 20px;
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .form-group label {
+            margin-bottom: 8px;
+            color: #b0b0b0;
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        .form-group input, .form-group select, .form-group textarea {
+            padding: 12px;
+            border: 1px solid #444444;
+            border-radius: 6px;
+            background: #1a1a1a;
+            color: #ffffff;
+            font-size: 14px;
+            transition: all 0.3s ease;
+        }
+
+        .form-group input:focus, .form-group select:focus, .form-group textarea:focus {
+            outline: none;
+            border-color: #00bcd4;
+            box-shadow: 0 0 0 3px rgba(0, 188, 212, 0.1);
+        }
+
+        .form-group textarea {
+            resize: vertical;
+            min-height: 80px;
+        }
+
+        .btn {
+            padding: 14px 28px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            margin-right: 10px;
+            margin-bottom: 10px;
+        }
+
+        .btn-primary {
+            background: #00bcd4;
+            color: #ffffff;
+        }
+
+        .btn-primary:hover {
+            background: #0097a7;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 188, 212, 0.3);
+        }
+
+        .btn-secondary {
+            background: #666666;
+            color: #ffffff;
+        }
+
+        .btn-secondary:hover {
+            background: #555555;
+        }
+
+        .btn-export {
+            background: #4caf50;
+            color: #ffffff;
+        }
+
+        .btn-export:hover {
+            background: #45a049;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .stat-card {
+            background: linear-gradient(135deg, #333333 0%, #2a2a2a 100%);
+            padding: 25px;
+            border-radius: 8px;
+            border-left: 4px solid #00bcd4;
+            transition: transform 0.3s ease;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .stat-card h4 {
+            color: #b0b0b0;
+            font-size: 14px;
+            margin-bottom: 10px;
+            text-transform: uppercase;
+        }
+
+        .stat-card .number {
+            font-size: 36px;
+            font-weight: bold;
+            color: #00bcd4;
+        }
+
+        .stat-card.platinum { border-left-color: #ff4444; }
+        .stat-card.platinum .number { color: #ff4444; }
+        .stat-card.gold { border-left-color: #ffaa00; }
+        .stat-card.gold .number { color: #ffaa00; }
+        .stat-card.silver { border-left-color: #ffeb3b; }
+        .stat-card.silver .number { color: #ffeb3b; }
+
+        .chart-container {
+            background: #333333;
+            padding: 25px;
+            border-radius: 8px;
+            margin-bottom: 25px;
+        }
+
+        .chart-container h3 {
+            color: #00bcd4;
+            margin-bottom: 20px;
+        }
+
+        .table-container {
+            overflow-x: auto;
+            background: #333333;
+            border-radius: 8px;
+            margin-top: 20px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        table thead {
+            background: #1a1a1a;
+        }
+
+        table th {
+            padding: 15px;
+            text-align: left;
+            color: #00bcd4;
+            font-weight: 600;
+            font-size: 14px;
+            text-transform: uppercase;
+        }
+
+        table td {
+            padding: 15px;
+            border-bottom: 1px solid #444444;
+            color: #e0e0e0;
+        }
+
+        table tbody tr:hover {
+            background: #2a2a2a;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .badge-platinum { background: #ff4444; color: #ffffff; }
+        .badge-gold { background: #ffaa00; color: #1a1a1a; }
+        .badge-silver { background: #ffeb3b; color: #1a1a1a; }
+        .badge-nao-contatado { background: #666666; color: #ffffff; }
+        .badge-agendado { background: #2196f3; color: #ffffff; }
+        .badge-realizado { background: #9c27b0; color: #ffffff; }
+        .badge-proposta { background: #ff9800; color: #ffffff; }
+        .badge-convertido { background: #4caf50; color: #ffffff; }
+        .badge-nao-interessado { background: #f44336; color: #ffffff; }
+        .badge-fast-start { background: #2196f3; color: #ffffff; }
+        .badge-certificacao-presencial { background: #4caf50; color: #ffffff; }
+        .badge-certificacao-online { background: #9c27b0; color: #ffffff; }
+
+        .filter-section {
+            background: #333333;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+
+        .filter-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+
+        .status-message {
+            padding: 15px;
+            border-radius: 6px;
+            margin-bottom: 20px;
+            font-weight: 600;
+        }
+
+        .status-success { background: #4caf50; color: #ffffff; }
+        .status-error { background: #f44336; color: #ffffff; }
+        .loading { text-align: center; padding: 40px; color: #00bcd4; }
+
+        @media (max-width: 768px) {
+            .form-grid, .filter-grid, .stats-grid {
+                grid-template-columns: 1fr;
+            }
+            .tabs { flex-wrap: wrap; }
+            .tab { flex: 1 1 50%; }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Dashboard Switchers — ClearCorrect</h1>
+            <p>Sistema de Gestão de Clínicas Switchers | SP + NE</p>
+        </div>
+
+        <div class="tabs">
+            <button class="tab active" onclick="openTab(event, 'cadastro')">📝 Cadastro</button>
+            <button class="tab" onclick="openTab(event, 'dashboard')">📊 Dashboard</button>
+            <button class="tab" onclick="openTab(event, 'relatorios')">📈 Relatórios</button>
+            <button class="tab" onclick="openTab(event, 'lista')">📋 Lista</button>
+        </div>
+
+        <div class="content">
+            <!-- CADASTRO -->
+            <div id="cadastro" class="tab-content active">
+                <div class="form-section">
+                    <h3>Cadastrar Nova Clínica</h3>
+                    <div id="statusMessage"></div>
+                    <form id="formClinica">
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label for="nomeClinica">Nome da Clínica *</label>
+                                <input type="text" id="nomeClinica" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="dentista">Dentista/Ortodontista *</label>
+                                <input type="text" id="dentista" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="regiao">Região *</label>
+                                <select id="regiao" required>
+                                    <option value="">Selecione...</option>
+                                    <option value="São Paulo">São Paulo</option>
+                                    <option value="Pernambuco">Pernambuco</option>
+                                    <option value="Bahia">Bahia</option>
+                                    <option value="Ceará">Ceará</option>
+                                    <option value="Paraíba">Paraíba</option>
+                                    <option value="Rio Grande do Norte">Rio Grande do Norte</option>
+                                    <option value="Alagoas">Alagoas</option>
+                                    <option value="Sergipe">Sergipe</option>
+                                    <option value="Piauí">Piauí</option>
+                                    <option value="Maranhão">Maranhão</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="cidade">Cidade *</label>
+                                <input type="text" id="cidade" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="telefone">Telefone *</label>
+                                <input type="tel" id="telefone" placeholder="(00) 00000-0000" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="email">Email</label>
+                                <input type="email" id="email">
+                            </div>
+                            <div class="form-group">
+                                <label for="selo">Selo *</label>
+                                <select id="selo" required>
+                                    <option value="">Selecione...</option>
+                                    <option value="Platinum">Platinum</option>
+                                    <option value="Gold">Gold</option>
+                                    <option value="Silver">Silver</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="status">Status CCE *</label>
+                                <select id="status" required>
+                                    <option value="Não Contatado">Não Contatado</option>
+                                    <option value="CCE Agendado">CCE Agendado</option>
+                                    <option value="CCE Realizado">CCE Realizado</option>
+                                    <option value="Proposta Enviada">Proposta Enviada</option>
+                                    <option value="Convertido">Convertido</option>
+                                    <option value="Não Interessado">Não Interessado</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="statusCertificacao">Status Certificação *</label>
+                                <select id="statusCertificacao" required>
+                                    <option value="">Selecione...</option>
+                                    <option value="Fast Start">Fast Start</option>
+                                    <option value="Certificação Presencial">Certificação Presencial</option>
+                                    <option value="Certificação Online">Certificação Online</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="urlPerfil">URL Perfil</label>
+                                <input type="url" id="urlPerfil">
+                            </div>
+                            <div class="form-group">
+                                <label for="tmResponsavel">TM Responsável *</label>
+                                <input type="text" id="tmResponsavel" required>
+                            </div>
+                        </div>
+                        <div class="form-group" style="margin-top: 20px;">
+                            <label for="observacoes">Observações</label>
+                            <textarea id="observacoes" placeholder="Ex.: Clínica grande, 5 ortodontistas..."></textarea>
+                        </div>
+                        <div style="margin-top: 25px;">
+                            <button type="submit" class="btn btn-primary">💾 Salvar Clínica</button>
+                            <button type="button" class="btn btn-secondary" onclick="limparFormulario()">🔄 Limpar</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- DASHBOARD -->
+            <div id="dashboard" class="tab-content">
+                <div class="loading" id="dashboardLoading">Carregando dados...</div>
+                <div id="dashboardContent" style="display: none;">
+                    <div class="stats-grid">
+                        <div class="stat-card">
+                            <h4>Total de Clínicas</h4>
+                            <div class="number" id="totalClinicas">0</div>
+                        </div>
+                        <div class="stat-card platinum">
+                            <h4>Platinum</h4>
+                            <div class="number" id="totalPlatinum">0</div>
+                        </div>
+                        <div class="stat-card gold">
+                            <h4>Gold</h4>
+                            <div class="number" id="totalGold">0</div>
+                        </div>
+                        <div class="stat-card silver">
+                            <h4>Silver</h4>
+                            <div class="number" id="totalSilver">0</div>
+                        </div>
+                        <div class="stat-card">
+                            <h4>CCEs Agendados</h4>
+                            <div class="number" id="totalAgendados">0</div>
+                        </div>
+                        <div class="stat-card">
+                            <h4>Convertidos</h4>
+                            <div class="number" id="totalConvertidos">0</div>
+                        </div>
+                    </div>
+
+                    <div class="chart-container">
+                        <h3>Distribuição por Selo</h3>
+                        <canvas id="seloChart"></canvas>
+                    </div>
+
+                    <div class="chart-container">
+                        <h3>Distribuição por Status CCE</h3>
+                        <canvas id="statusChart"></canvas>
+                    </div>
+
+                    <div class="chart-container">
+                        <h3>Distribuição por Status Certificação</h3>
+                        <canvas id="certificacaoChart"></canvas>
+                    </div>
+
+                    <div class="chart-container">
+                        <h3>Clínicas por Região</h3>
+                        <canvas id="regiaoChart"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <!-- RELATÓRIOS -->
+            <div id="relatorios" class="tab-content">
+                <div class="filter-section">
+                    <h3 style="color: #00bcd4; margin-bottom: 15px;">Filtros de Relatório</h3>
+                    <div class="filter-grid">
+                        <div class="form-group">
+                            <label for="filtroRegiao">Região</label>
+                            <select id="filtroRegiao">
+                                <option value="">Todas</option>
+                                <option value="São Paulo">São Paulo</option>
+                                <option value="Pernambuco">Pernambuco</option>
+                                <option value="Bahia">Bahia</option>
+                                <option value="Ceará">Ceará</option>
+                                <option value="Paraíba">Paraíba</option>
+                                <option value="Rio Grande do Norte">Rio Grande do Norte</option>
+                                <option value="Alagoas">Alagoas</option>
+                                <option value="Sergipe">Sergipe</option>
+                                <option value="Piauí">Piauí</option>
+                                <option value="Maranhão">Maranhão</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="filtroSelo">Selo</label>
+                            <select id="filtroSelo">
+                                <option value="">Todos</option>
+                                <option value="Platinum">Platinum</option>
+                                <option value="Gold">Gold</option>
+                                <option value="Silver">Silver</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="filtroStatus">Status CCE</label>
+                            <select id="filtroStatus">
+                                <option value="">Todos</option>
+                                <option value="Não Contatado">Não Contatado</option>
+                                <option value="CCE Agendado">CCE Agendado</option>
+                                <option value="CCE Realizado">CCE Realizado</option>
+                                <option value="Proposta Enviada">Proposta Enviada</option>
+                                <option value="Convertido">Convertido</option>
+                                <option value="Não Interessado">Não Interessado</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="filtroCertificacao">Status Certificação</label>
+                            <select id="filtroCertificacao">
+                                <option value="">Todos</option>
+                                <option value="Fast Start">Fast Start</option>
+                                <option value="Certificação Presencial">Certificação Presencial</option>
+                                <option value="Certificação Online">Certificação Online</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="filtroTM">TM Responsável</label>
+                            <input type="text" id="filtroTM" placeholder="Nome do TM">
+                        </div>
+                    </div>
+                    <div style="margin-top: 20px;">
+                        <button class="btn btn-primary" onclick="aplicarFiltros()">🔍 Aplicar Filtros</button>
+                        <button class="btn btn-secondary" onclick="limparFiltros()">🔄 Limpar</button>
+                        <button class="btn btn-export" onclick="exportarExcel()">📥 Exportar Excel</button>
+                    </div>
+                </div>
+
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Clínica</th>
+                                <th>Dentista</th>
+                                <th>Região</th>
+                                <th>Cidade</th>
+                                <th>Selo</th>
+                                <th>Status CCE</th>
+                                <th>Status Certificação</th>
+                                <th>TM</th>
+                            </tr>
+                        </thead>
+                        <tbody id="corpoRelatorio">
+                            <tr>
+                                <td colspan="8" style="text-align: center; padding: 40px; color: #666;">Carregando dados...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- LISTA -->
+            <div id="lista" class="tab-content">
+                <div style="margin-bottom: 20px;">
+                    <button class="btn btn-export" onclick="exportarExcel()">📥 Exportar Excel</button>
+                </div>
+
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Clínica</th>
+                                <th>Dentista</th>
+                                <th>Região</th>
+                                <th>Cidade</th>
+                                <th>Telefone</th>
+                                <th>Email</th>
+                                <th>Selo</th>
+                                <th>Status CCE</th>
+                                <th>Status Certificação</th>
+                                <th>TM</th>
+                            </tr>
+                        </thead>
+                        <tbody id="corpoLista">
+                            <tr>
+                                <td colspan="10" style="text-align: center; padding: 40px; color: #666;">Carregando dados...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_URL = 'https://script.google.com/macros/s/AKfycbysWfXPWszLdibOzJouF-qWYejWl0ZaovwDH3Crp0YFGK6QJANAlQ3hJ4yCW3tmVGtc/exec';
+
+        let clinicas = [];
+        let seloChart, statusChart, certificacaoChart, regiaoChart;
+
+        async function carregarDadosDaPlanilha() {
+            try {
+                const resp = await fetch(API_URL);
+                const dados = await resp.json();
+                clinicas = dados || [];
+                return clinicas;
+            } catch (error) {
+                console.error('Erro ao carregar dados:', error);
+                return [];
+            }
+        }
+
+        function openTab(evt, tabName) {
+            const tabcontent = document.getElementsByClassName("tab-content");
+            for (let i = 0; i < tabcontent.length; i++) {
+                tabcontent[i].classList.remove("active");
+            }
+
+            const tabs = document.getElementsByClassName("tab");
+            for (let i = 0; i < tabs.length; i++) {
+                tabs[i].classList.remove("active");
+            }
+
+            document.getElementById(tabName).classList.add("active");
+            evt.currentTarget.classList.add("active");
+
+            if (tabName === 'dashboard') {
+                carregarDadosDaPlanilha().then(() => {
+                    document.getElementById('dashboardLoading').style.display = 'none';
+                    document.getElementById('dashboardContent').style.display = 'block';
+                    atualizarDashboard();
+                });
+            } else if (tabName === 'relatorios') {
+                carregarDadosDaPlanilha().then(() => atualizarRelatorio());
+            } else if (tabName === 'lista') {
+                carregarDadosDaPlanilha().then(() => atualizarLista());
+            }
+        }
+
+        function limparFormulario() {
+            document.getElementById('formClinica').reset();
+            document.getElementById('statusMessage').innerHTML = '';
+        }
+
+        function mostrarStatus(mensagem, tipo) {
+            const statusDiv = document.getElementById('statusMessage');
+            statusDiv.className = `status-message status-${tipo}`;
+            statusDiv.innerText = mensagem;
+            setTimeout(() => {
+                statusDiv.innerHTML = '';
+            }, 5000);
+        }
+
+        document.getElementById('formClinica').addEventListener('submit', async function(e) {
+            e.preventDefault();
+
+            const clinica = {
+                nomeClinica: document.getElementById('nomeClinica').value.trim(),
+                dentista: document.getElementById('dentista').value.trim(),
+                regiao: document.getElementById('regiao').value,
+                cidade: document.getElementById('cidade').value.trim(),
+                telefone: document.getElementById('telefone').value.trim(),
+                email: document.getElementById('email').value.trim(),
+                selo: document.getElementById('selo').value,
+                status: document.getElementById('status').value,
+                statusCertificacao: document.getElementById('statusCertificacao').value,
+                urlPerfil: document.getElementById('urlPerfil').value.trim(),
+                tmResponsavel: document.getElementById('tmResponsavel').value.trim(),
+                observacoes: document.getElementById('observacoes').value.trim()
+            };
+
+            try {
+                await fetch(API_URL, {
+                    method: 'POST',
+                    mode: 'no-cors',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(clinica)
+                });
+
+                mostrarStatus('✅ Clínica enviada com sucesso!', 'success');
+                limparFormulario();
+
+            } catch (error) {
+                console.error(error);
+                mostrarStatus('❌ Erro ao enviar. Verifique sua conexão.', 'error');
+            }
+        });
+
+        function atualizarDashboard() {
+            const total = clinicas.length;
+            const totalPlatinum = clinicas.filter(c => c.selo === 'Platinum').length;
+            const totalGold = clinicas.filter(c => c.selo === 'Gold').length;
+            const totalSilver = clinicas.filter(c => c.selo === 'Silver').length;
+            const totalAgendados = clinicas.filter(c => c.status === 'CCE Agendado').length;
+            const totalConvertidos = clinicas.filter(c => c.status === 'Convertido').length;
+
+            document.getElementById('totalClinicas').innerText = total;
+            document.getElementById('totalPlatinum').innerText = totalPlatinum;
+            document.getElementById('totalGold').innerText = totalGold;
+            document.getElementById('totalSilver').innerText = totalSilver;
+            document.getElementById('totalAgendados').innerText = totalAgendados;
+            document.getElementById('totalConvertidos').innerText = totalConvertidos;
+
+            if (seloChart) seloChart.destroy();
+            const ctxSelo = document.getElementById('seloChart').getContext('2d');
+            seloChart = new Chart(ctxSelo, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Platinum', 'Gold', 'Silver'],
+                    datasets: [{
+                        data: [totalPlatinum, totalGold, totalSilver],
+                        backgroundColor: ['#ff4444', '#ffaa00', '#ffeb3b'],
+                        borderColor: '#2a2a2a',
+                        borderWidth: 2
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: { legend: { labels: { color: '#e0e0e0', font: { size: 14 } } } }
+                }
+            });
+
+            const statusCounts = {};
+            clinicas.forEach(c => {
+                statusCounts[c.status] = (statusCounts[c.status] || 0) + 1;
+            });
+
+            if (statusChart) statusChart.destroy();
+            const ctxStatus = document.getElementById('statusChart').getContext('2d');
+            statusChart = new Chart(ctxStatus, {
+                type: 'bar',
+                data: {
+                    labels: Object.keys(statusCounts),
+                    datasets: [{
+                        label: 'Quantidade',
+                        data: Object.values(statusCounts),
+                        backgroundColor: '#00bcd4',
+                        borderColor: '#0097a7',
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    indexAxis: 'y',
+                    plugins: { legend: { labels: { color: '#e0e0e0' } } },
+                    scales: {
+                        x: { ticks: { color: '#e0e0e0' }, grid: { color: '#444444' } },
+                        y: { ticks: { color: '#e0e0e0' }, grid: { color: '#444444' } }
+                    }
+                }
+            });
+
+            const certificacaoCounts = {};
+            clinicas.forEach(c => {
+                certificacaoCounts[c.statusCertificacao] = (certificacaoCounts[c.statusCertificacao] || 0) + 1;
+            });
+
+            if (certificacaoChart) certificacaoChart.destroy();
+            const ctxCertificacao = document.getElementById('certificacaoChart').getContext('2d');
+            certificacaoChart = new Chart(ctxCertificacao, {
+                type: 'pie',
+                data: {
+                    labels: Object.keys(certificacaoCounts),
+                    datasets: [{
+                        data: Object.values(certificacaoCounts),
+                        backgroundColor: ['#2196f3', '#4caf50', '#9c27b0'],
+                        borderColor: '#2a2a2a',
+                        borderWidth: 2
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: { legend: { labels: { color: '#e0e0e0', font: { size: 14 } } } }
+                }
+            });
+
+            const regiaoCounts = {};
+            clinicas.forEach(c => {
+                regiaoCounts[c.regiao] = (regiaoCounts[c.regiao] || 0) + 1;
+            });
+
+            if (regiaoChart) regiaoChart.destroy();
+            const ctxRegiao = document.getElementById('regiaoChart').getContext('2d');
+            regiaoChart = new Chart(ctxRegiao, {
+                type: 'bar',
+                data: {
+                    labels: Object.keys(regiaoCounts),
+                    datasets: [{
+                        label: 'Clínicas',
+                        data: Object.values(regiaoCounts),
+                        backgroundColor: '#4caf50',
+                        borderColor: '#45a049',
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: { legend: { labels: { color: '#e0e0e0' } } },
+                    scales: {
+                        x: { ticks: { color: '#e0e0e0' }, grid: { color: '#444444' } },
+                        y: { ticks: { color: '#e0e0e0' }, grid: { color: '#444444' } }
+                    }
+                }
+            });
+        }
+
+        function atualizarRelatorio() {
+            renderizarTabela(clinicas, 'corpoRelatorio', false);
+        }
+
+        function aplicarFiltros() {
+            const regiao = document.getElementById('filtroRegiao').value;
+            const selo = document.getElementById('filtroSelo').value;
+            const status = document.getElementById('filtroStatus').value;
+            const certificacao = document.getElementById('filtroCertificacao').value;
+            const tm = document.getElementById('filtroTM').value.toLowerCase();
+
+            const filtrados = clinicas.filter(c => {
+                return (regiao === '' || c.regiao === regiao) &&
+                       (selo === '' || c.selo === selo) &&
+                       (status === '' || c.status === status) &&
+                       (certificacao === '' || c.statusCertificacao === certificacao) &&
+                       (tm === '' || c.tmResponsavel.toLowerCase().includes(tm));
+            });
+
+            renderizarTabela(filtrados, 'corpoRelatorio', false);
+        }
+
+        function limparFiltros() {
+            document.getElementById('filtroRegiao').value = '';
+            document.getElementById('filtroSelo').value = '';
+            document.getElementById('filtroStatus').value = '';
+            document.getElementById('filtroCertificacao').value = '';
+            document.getElementById('filtroTM').value = '';
+            atualizarRelatorio();
+        }
+
+        function atualizarLista() {
+            renderizarTabela(clinicas, 'corpoLista', true);
+        }
+
+        function renderizarTabela(dados, tbodyId, comTelefone) {
+            const tbody = document.getElementById(tbodyId);
+            tbody.innerHTML = '';
+
+            if (dados.length === 0) {
+                const colspan = comTelefone ? 10 : 8;
+                tbody.innerHTML = `<tr><td colspan="${colspan}" style="text-align: center; padding: 40px; color: #666;">Nenhum registro encontrado</td></tr>`;
+                return;
+            }
+
+            dados.forEach(c => {
+                const badgeSelo = `badge-${c.selo.toLowerCase()}`;
+                const badgeStatus = {
+                    'Não Contatado': 'badge-nao-contatado',
+                    'CCE Agendado': 'badge-agendado',
+                    'CCE Realizado': 'badge-realizado',
+                    'Proposta Enviada': 'badge-proposta',
+                    'Convertido': 'badge-convertido',
+                    'Não Interessado': 'badge-nao-interessado'
+                }[c.status] || 'badge-nao-contatado';
+
+                const badgeCertificacao = {
+                    'Fast Start': 'badge-fast-start',
+                    'Certificação Presencial': 'badge-certificacao-presencial',
+                    'Certificação Online': 'badge-certificacao-online'
+                }[c.statusCertificacao] || 'badge-nao-contatado';
+
+                let row = `
+                    <tr>
+                        <td>${c.nomeClinica}</td>
+                        <td>${c.dentista}</td>
+                        <td>${c.regiao}</td>
+                        <td>${c.cidade}</td>
+                `;
+
+                if (comTelefone) {
+                    row += `
+                        <td>${c.telefone}</td>
+                        <td>${c.email || '-'}</td>
+                    `;
+                }
+
+                row += `
+                        <td><span class="badge ${badgeSelo}">${c.selo}</span></td>
+                        <td><span class="badge ${badgeStatus}">${c.status}</span></td>
+                        <td><span class="badge ${badgeCertificacao}">${c.statusCertificacao}</span></td>
+                        <td>${c.tmResponsavel}</td>
+                    </tr>
+                `;
+                tbody.innerHTML += row;
+            });
+        }
+
+        function exportarExcel() {
+            if (clinicas.length === 0) {
+                alert('Nenhum dado para exportar.');
+                return;
+            }
+
+            const header = ['Nome Clínica', 'Dentista', 'Região', 'Cidade', 'Telefone', 'Email', 'Selo', 'Status CCE', 'Status Certificação', 'TM Responsável', 'URL Perfil', 'Observações'];
+            const rows = clinicas.map(c => [
+                c.nomeClinica, c.dentista, c.regiao, c.cidade, c.telefone, c.email || '', c.selo, c.status, c.statusCertificacao, c.tmResponsavel, c.urlPerfil || '', c.observacoes || ''
+            ]);
+
+            const csvContent = [header, ...rows]
+                .map(e => e.map(v => `"${(v || '').toString().replace(/"/g, '""')}"`).join(','))
+                .join('\n');
+
+            const blob = new Blob(['\uFEFF' + csvContent], { type: 'text/csv;charset=utf-8;' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'clinicas_switchers_' + new Date().toISOString().split('T')[0] + '.csv';
+            a.click();
+            URL.revokeObjectURL(url);
+        }
+    </script>
+</body>
+</html>
